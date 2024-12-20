@@ -1,0 +1,52 @@
+# Node modules
+node_modules
+
+# Logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Dependency directories
+/.pnp
+.pnp.js
+
+# Next.js build output
+.next
+
+
+# Generated files
+*.log
+*.lock
+*.pid
+*.seed
+*.pid.lock
+
+# .env files (sensitive environment variables)
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+# Next.js static file cache
+.cache/
+
+# Optional npm cache directory
+.npm/
+
+# IDE-specific files
+.vscode/
+.idea/
+*.swp
+*.swo
+.DS_Store
+Thumbs.db
+
+# Test output
+coverage/
+*.lcov
+jest-html-reporters-*.html
+
+# Build artifacts
+dist/
+build/
