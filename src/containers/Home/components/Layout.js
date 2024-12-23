@@ -21,6 +21,7 @@ import axios from "axios";
 import PostCreate from "./CreatePost";
 import GroupCreate from "./CreateGroup";
 import CryptocurrencyCreate from "./CreateCryptocurrency";
+import AICreate from "./CreateAI";
 
 import { setSortFilter } from "../../../store/actions";
 
@@ -131,6 +132,7 @@ function Layout({ topics: { topics, loading }, user: { user } }) {
                 <PostCreate user={user} />
                 <GroupCreate user={user} />
                 <CryptocurrencyCreate user={user} />
+                <AICreate user={user} />
                 {/* <LadderBoard item="1" single /> */}
                 <SiteInfo />
               </div>
