@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import Paper from "@material-ui/core/Paper";
 import Button from "@material-ui/core/Button";
 import Typography from "@material-ui/core/Typography";
@@ -17,12 +17,15 @@ import Select from "@material-ui/core/Select";
 import MenuItem from "@material-ui/core/MenuItem";
 import Alert from "@material-ui/lab/Alert";
 import CircularProgress from "@material-ui/core/CircularProgress";
+import Add from "@material-ui/icons/Add";
+import Chip from "@material-ui/core/Chip";
+import Avatar from "@material-ui/core/Avatar";
 
 import { withTranslation } from "../../../../i18n";
 import { config } from "../../../../config";
 import axios from "axios";
 
-const AICreate = ({ user, i18n, t }) => {
+const AICreate = ({ user, siteUrl, i18n, t }) => {
     const classes = useStyles();
     const router = useRouter();
 
@@ -43,12 +46,88 @@ const AICreate = ({ user, i18n, t }) => {
     const [base64, setBase64] = useState(null);
     const [creategroup, setcreategroup] = useState(false);
     const [loading, setLoading] = useState(false);
+    const [chipData, setChipData] = useState([]);
+    const [groupsList, setGroupsList] = useState([]);
+
+    const [val, setVal] = useState({
+        url: siteUrl ? siteUrl : "",
+        title: "",
+        details: "",
+        tag: "",
+        img: "",
+    });
+
+    useEffect(() => {
+        handleGetGroupsList();  // Call the function to fetch groups data on component mount
+    }, []);
 
     const handleChange = (name) => (event) => {
         setGroupdata({
             ...groupdata,
             [name]: event.target.value,
         });
+    };
+
+    const handleChangeEventForTags = (name) => (event) => {
+        setVal({
+            ...val,
+            [name]: event.target.value,
+        });
+    };
+
+    const addTag = () => {
+        handleChangeTag(undefined, true);
+    };
+
+    const handleChangeTag = (e, ignoreEvent) => {
+        if (
+            ignoreEvent ||
+            e.keyCode === 32 ||
+            e.key === " " ||
+            e.key === "Spacebar" ||
+            e.key === "Enter"
+        ) {
+            let data = chipData.flatMap((chip) => chip.label);
+            val.tag = val.tag && val.tag.replace(/[#\$%&\^\!@#$*\[\]\.\()+`~]*/g, "");
+            if (
+                val.tag &&
+                !data.includes(val.tag) &&
+                chipData.length <= 4 &&
+                !val.tag.match(/^\s+$/)
+            ) {
+                chipData.push({
+                    key: val.tag + Math.floor(Math.random() * 10 + 1),
+                    label: val.tag
+                        .substring(0, 20)
+                        .toLocaleLowerCase()
+                        .replace(/ /gi, ""),
+                });
+
+                setChipData(chipData);
+                setVal({
+                    ...val,
+                    tag: "",
+                });
+            }
+        }
+    };
+
+    const handleTagRender = () => {
+        return chipData.map((tag) => (
+            <Chip
+                key={tag.key}
+                variant="outlined"
+                size="small"
+                avatar={<Avatar>#</Avatar>}
+                label={tag.label}
+                onDelete={() => handleDeleteForTag(tag)}
+                color="primary"
+            />
+        ));
+    };
+
+    const handleDeleteForTag = (data) => {
+        setChipData(chipData.filter((chip) => chip.key !== data.key));
     };
 
     function openCreateGroup() {
@@ -82,7 +161,7 @@ const AICreate = ({ user, i18n, t }) => {
         };
 
         reader.onerror = function (error) {
-            
+
         };
     };
 
@@ -90,6 +169,29 @@ const AICreate = ({ user, i18n, t }) => {
         setImg(null);
         setBase64(null);
     }
+
+    const handleGetGroupsList = async () => {
+
+        try {
+            if (!loading) {
+                const token = localStorage.getItem("token");
+                const groups = await axios.get(config.listgroups + "?joinedgroups=1&username=" + user.username, {
+                    headers: { "x-auth-token": token },
+                });
+                setLoading(true);
+                setGroupsList([]);
+
+                console.log("groupslist", groups.data);
+                if (groups.data.status == "success") {
+                    setLoading(false);
+                    setGroupsList(groups.data.groups);
+                }
+            }
+        }
+        catch (error) {
+            setLoading(false);
+        }
+    };
 
     const handleCreateGroup = async () => {
         try {
@@ -166,7 +268,7 @@ const AICreate = ({ user, i18n, t }) => {
 
             console.log("creategroup response", creategroupresponse);
             setLoading(false);
-            
+
             router.push(
                 `/group/${groupdata.name.replaceAll(" ", "-").replace("&", "%26")}`
             );
@@ -205,20 +307,19 @@ const AICreate = ({ user, i18n, t }) => {
 
                     <div className={classes.selectBox}>
                         <Typography className={classes.selectInput}>
-                        <b> AI Agent Model</b>
+                            <b> AI Agent Model</b>
                         </Typography>
                         <FormControl className={classes.formControl}>
-                        <Select onChange={handleChange("networkId")}>
-                            <MenuItem value="" disabled>
-                            AI Agent Model
-                            </MenuItem>
-                            <MenuItem value="GPT-4o mini">GPT-4o mini</MenuItem>
-                            <MenuItem value="GPT-4o">GPT-4o</MenuItem>
-                        </Select>
+                            <Select onChange={handleChange("networkId")}>
+                                <MenuItem value="" disabled>
+                                    AI Agent Model
+                                </MenuItem>
+                                <MenuItem value="GPT-4o mini">Content-Agent</MenuItem>
+                            </Select>
                         </FormControl>
                     </div>
 
-                    <Typography>Maximum of 5 groups allowed per household.</Typography>
+
 
                     {res.err && <Alert severity={res.status}>{res.msg}</Alert>}
 
@@ -236,41 +337,34 @@ const AICreate = ({ user, i18n, t }) => {
 
                     <div className={classes.selectBox}>
                         <Typography className={classes.selectInput}>
-                        <b> Select Group</b>
+                            <b> Select Group</b>
                         </Typography>
                         <FormControl className={classes.formControl}>
-                        <Select onChange={handleChange("networkId")}>
-                            <MenuItem value="" disabled>
-                            Select Group
-                            </MenuItem>
-                            <MenuItem value="GPT-4o mini">GPT-4o mini</MenuItem>
-                            <MenuItem value="GPT-4o">GPT-4o</MenuItem>
-                            <MenuItem value="GPT-4o mini">GPT-4o mini</MenuItem>
-                            <MenuItem value="GPT-4o">GPT-4o</MenuItem>
-                            <MenuItem value="GPT-4o mini">GPT-4o mini</MenuItem>
-                            <MenuItem value="GPT-4o">GPT-4o</MenuItem>
-                            <MenuItem value="GPT-4o mini">GPT-4o mini</MenuItem>
-                            <MenuItem value="GPT-4o">GPT-4o</MenuItem>
-                            <MenuItem value="GPT-4o mini">GPT-4o mini</MenuItem>
-                            <MenuItem value="GPT-4o">GPT-4o</MenuItem>
-                        </Select>
+                            <Select onChange={handleChange("networkId")}>
+                                <MenuItem value="" disabled>
+                                    Select Group
+                                </MenuItem>
+                                {groupsList.length > 0 ? (
+                                    groupsList.map((group, index) => (
+                                        <MenuItem key={index} value={group.name}>
+                                            {group.name}  {/* Adjust the property name to match your data */}
+                                        </MenuItem>
+                                    ))
+                                ) : (
+                                    <MenuItem value="" disabled>Loading Groups...</MenuItem>
+                                )}
+                            </Select>
                         </FormControl>
                     </div>
 
                     <div className={classes.formgrp}>
                         <Typography>
-                            <b>Description</b>
-                        </Typography>
-                        <Typography>
-                            Describe the purpose of your group to new members.
+                            <b>Topic</b>
                         </Typography>
                         <TextField
                             variant="outlined"
-                            multiline
-                            rows={3}
                             fullWidth
-                            rowsMax={4}
-                            onChange={handleChange("description")}
+                            onChange={handleChange("topic")}
                             className={classes.TextField}
                         />
                     </div>
@@ -311,34 +405,34 @@ const AICreate = ({ user, i18n, t }) => {
                         </div>
                     </div>
 
-                    <div className={classes.formgrp}>
-                        <Typography>
-                            <b>{t("Adult Content")}</b>
-                        </Typography>
-                        <FormControlLabel
-                            value="1"
-                            control={
-                                <Checkbox onChange={handleChange("is_nsfw")} color="primary" />
-                            }
-                            label={
-                                <b>
-                                    <span className={classes.nsfw}>NSFW</span> 18+ year old
-                                    community
-                                </b>
-                            }
-                            labelPlacement="end"
+                    <div className={classes.tag}>{handleTagRender()}</div>
+
+                    <div className={classes.relative}>
+                        <TextField
+                            required
+                            id="name"
+                            onChange={handleChangeEventForTags("tag")}
+                            onText
+                            onKeyUp={handleChangeTag}
+                            value={val.tag}
+                            label={t("Add Tag")}
+                            margin="dense"
+                            placeholder={t("Enter a hashtag")}
+                            // size="small"
+                            fullWidth
+                            variant="outlined"
                         />
-                        <Typography>
-                            Groups must be marked NSFW if they contain any of the following:
-                            <br/>
-                            1. Violent or sexual imagery.
-                            <br/>
-                            2. Bigotry.
-                            <br/>
-                            3. Personal attacks.
-                            <p></p>
-                            Groups marked NSFW are opt-in and will not show up on the site's default feed. In order to view content from a NSFW group, members can subscribe to the group to see its content on their Home feed, or visit the group's page directly.
-                        </Typography>
+                        <Button
+                            disabled={val.tag == ""}
+                            variant="contained"
+                            color="primary"
+                            size="small"
+                            className={classes.button}
+                            onClickCapture={addTag}
+                        >
+                            {" "}
+                            <Add />
+                        </Button>
                     </div>
                 </DialogContent>
 
@@ -439,12 +533,27 @@ const useStyles = makeStyles((theme) => ({
         marginRight: "2rem",
     },
     selectBox: {
-      padding: "20px 0",
-      margin: "auto",
+        padding: "20px 0",
+        margin: "auto",
     },
     formControl: {
         minWidth: 120,
-    }
+    },
+    button: {
+        position: "absolute",
+        top: 10.3,
+        right: 3,
+    },
+    relative: {
+        position: "relative",
+    },
+    tag: {
+        display: "flex",
+        justifyContent: "center",
+        alignItems: "center",
+        flexDirection: "row",
+        flexWrap: "wrap",
+    },
 }));
 
 export default withTranslation()(AICreate);
