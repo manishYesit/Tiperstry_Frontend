@@ -6,12 +6,9 @@ import { makeStyles } from "@material-ui/core/styles";
 import { useRouter } from "next/router";
 
 import Dialog from "@material-ui/core/Dialog";
-import DialogTitle from "@material-ui/core/DialogTitle";
 import DialogContent from "@material-ui/core/DialogContent";
 import DialogActions from "@material-ui/core/DialogActions";
 import TextField from "@material-ui/core/TextField";
-import Checkbox from "@material-ui/core/Checkbox";
-import FormControlLabel from "@material-ui/core/FormControlLabel";
 import FormControl from "@material-ui/core/FormControl";
 import Select from "@material-ui/core/Select";
 import MenuItem from "@material-ui/core/MenuItem";
@@ -25,15 +22,15 @@ import { withTranslation } from "../../../../i18n";
 import { config } from "../../../../config";
 import axios from "axios";
 
-const AICreate = ({ user, siteUrl, i18n, t }) => {
+const AICreate = ({ user, t }) => {
     const classes = useStyles();
     const router = useRouter();
 
-    const [groupdata, setGroupdata] = useState({
+    const [aiData, setAIData] = useState({
         name: "",
-        description: "",
-        is_nsfw: 0,
-        icon: "",
+        agent_model: "",
+        groupId: "",
+        topic: "",
     });
 
     const [res, setRes] = React.useState({
@@ -42,28 +39,24 @@ const AICreate = ({ user, siteUrl, i18n, t }) => {
         status: "",
     });
 
-    const [img, setImg] = useState(null);
-    const [base64, setBase64] = useState(null);
-    const [creategroup, setcreategroup] = useState(false);
+    const [createAI, setCreateAI] = useState(false);
     const [loading, setLoading] = useState(false);
     const [chipData, setChipData] = useState([]);
     const [groupsList, setGroupsList] = useState([]);
 
     const [val, setVal] = useState({
-        url: siteUrl ? siteUrl : "",
-        title: "",
-        details: "",
-        tag: "",
-        img: "",
+        tag: ""
     });
 
     useEffect(() => {
-        handleGetGroupsList();  // Call the function to fetch groups data on component mount
-    }, []);
+        if (user) {
+            handleGetGroupsList();  // Call the function to fetch groups data on component mount
+        }
+    }, [user]);
 
     const handleChange = (name) => (event) => {
-        setGroupdata({
-            ...groupdata,
+        setAIData({
+            ...aiData,
             [name]: event.target.value,
         });
     };
@@ -130,93 +123,61 @@ const AICreate = ({ user, siteUrl, i18n, t }) => {
         setChipData(chipData.filter((chip) => chip.key !== data.key));
     };
 
-    function openCreateGroup() {
+    function openCreateAI() {
         if (!user) {
             // not logged in
             location.href = "/login";
             return;
         }
-        setcreategroup(true);
+        setCreateAI(true);
     }
 
-    function closeCreateGroup() {
-        setcreategroup(false);
-    }
-
-    const getBase64 = () => {
-        const file = event.target.files[0];
-
-        if (typeof file === "undefined") return;
-
-        setImg(event.target.files[0]);
-
-        let self = this;
-
-        let reader = new FileReader();
-
-        reader.readAsDataURL(file);
-
-        reader.onload = function () {
-            setBase64(reader.result);
-        };
-
-        reader.onerror = function (error) {
-
-        };
-    };
-
-    function handleRemove() {
-        setImg(null);
-        setBase64(null);
+    function closeCreateAI() {
+        setCreateAI(false);
     }
 
     const handleGetGroupsList = async () => {
-
         try {
-            if (!loading) {
-                const token = localStorage.getItem("token");
+            const token = localStorage.getItem("token");
+            if (token) {
                 const groups = await axios.get(config.listgroups + "?joinedgroups=1&username=" + user.username, {
                     headers: { "x-auth-token": token },
                 });
-                setLoading(true);
-                setGroupsList([]);
 
-                console.log("groupslist", groups.data);
                 if (groups.data.status == "success") {
-                    setLoading(false);
                     setGroupsList(groups.data.groups);
                 }
             }
         }
         catch (error) {
-            setLoading(false);
+            console.log(error);
         }
     };
 
-    const handleCreateGroup = async () => {
+    const handleCreateAI = async () => {
         try {
             // validations
-            if (groupdata.name === "" || groupdata.name === undefined) {
+            if (aiData.name === "" || aiData.name === undefined) {
                 setRes({
                     err: true,
-                    msg: "Group Name is required",
+                    msg: "AI Agent name is required",
                     status: "warning",
                 });
                 return;
-            } else if (groupdata.name.split(" ").length <= 1) {
+            } else if (aiData.name.split(" ").length <= 1) {
                 setRes({
                     err: true,
-                    msg: "Group Name must have atleast two words",
+                    msg: "AI Agent name must have atleast two words",
                     status: "warning",
                 });
                 return;
             } else if (
-                groupdata.description === "" ||
-                groupdata.description === undefined
+                aiData.agent_model === "" ||
+                aiData.agent_model === undefined
             ) {
                 setRes({
                     err: true,
-                    msg: "Group Description is required",
+                    msg: "AI Agent model is required",
                     status: "warning",
                 });
                 return;
@@ -225,21 +186,18 @@ const AICreate = ({ user, siteUrl, i18n, t }) => {
             setLoading(true);
 
             const formData = new FormData();
-            if (img) formData.append("icon", img);
-            formData.append("name", groupdata.name);
-            formData.append("description", groupdata.description);
+            formData.append("name", aiData.name);
+            formData.append("agent_model", aiData.agent_model);
+            formData.append("groupId", aiData.groupId);
+            formData.append("topic", aiData.topic);
 
-            let is_nsfw = 0;
-            if (groupdata.is_nsfw == "1") is_nsfw = 1;
-
-            formData.append("is_nsfw", is_nsfw);
             setLoading(false);
+            return;
 
             const token = localStorage.getItem("token");
 
             const headers = {
-                "x-auth-token": token,
-                "Content-Type": "multipart/form-data",
+                "x-auth-token": token
             };
 
             const creategroupresponse = await axios({
@@ -252,25 +210,17 @@ const AICreate = ({ user, siteUrl, i18n, t }) => {
             if (creategroupresponse.data.status != "success") {
                 setRes({
                     err: true,
-                    msg: "This group already exists",
+                    msg: "This AI Agent already exists",
                     status: "warning",
                 });
-            }
 
-            if (creategroupresponse.data.status != "success") {
-                setRes({
-                    err: true,
-                    msg: "This group already exists",
-                    status: "warning",
-                });
                 return;
             }
 
-            console.log("creategroup response", creategroupresponse);
             setLoading(false);
 
             router.push(
-                `/group/${groupdata.name.replaceAll(" ", "-").replace("&", "%26")}`
+                `/group/${aiData.name.replaceAll(" ", "-").replace("&", "%26")}`
             );
         } catch (error) {
             setLoading(false);
@@ -281,12 +231,12 @@ const AICreate = ({ user, siteUrl, i18n, t }) => {
     return (
         <div>
             <Dialog
-                open={creategroup}
+                open={createAI}
                 style={{ WebkitOverflowScrolling: "touch" }}
                 fullWidth={true}
                 maxWidth="sm"
                 aira-label="Create Group Window"
-                onClose={closeCreateGroup}
+                onClose={closeCreateAI}
                 aria-labelledby="alert-dialog-slide-title"
                 aria-describedby="alert-dialog-slide-description"
             >
@@ -302,26 +252,42 @@ const AICreate = ({ user, siteUrl, i18n, t }) => {
                     Create AI Bot
                 </div>
 
-
                 <DialogContent className={classes.crgrpdialog}>
+                    {res.err && <Alert severity={res.status}>{res.msg}</Alert>}
 
                     <div className={classes.selectBox}>
                         <Typography className={classes.selectInput}>
-                            <b> AI Agent Model</b>
+                            <b>AI Agent Model</b>
                         </Typography>
                         <FormControl className={classes.formControl}>
-                            <Select onChange={handleChange("networkId")}>
+                            <Select onChange={handleChange("agent_model")}>
                                 <MenuItem value="" disabled>
                                     AI Agent Model
                                 </MenuItem>
-                                <MenuItem value="GPT-4o mini">Content-Agent</MenuItem>
+                                <MenuItem value="Content">Content-Agent</MenuItem>
                             </Select>
                         </FormControl>
                     </div>
 
-
-
-                    {res.err && <Alert severity={res.status}>{res.msg}</Alert>}
+                    <div className={classes.selectBox}>
+                        <Typography className={classes.selectInput}>
+                            <b>Select Group</b>
+                        </Typography>
+                        <FormControl className={classes.formControl}>
+                            <Select onChange={handleChange("groupId")}>
+                                <MenuItem value="" disabled>
+                                    Select Group
+                                </MenuItem>
+                                {groupsList.length && (
+                                    groupsList.map((group, index) => (
+                                        <MenuItem key={index} value={group._id}>
+                                            {group.name}
+                                        </MenuItem>
+                                    ))
+                                )}
+                            </Select>
+                        </FormControl>
+                    </div>
 
                     <div className={classes.formgrp}>
                         <Typography>
@@ -335,28 +301,6 @@ const AICreate = ({ user, siteUrl, i18n, t }) => {
                         />
                     </div>
 
-                    <div className={classes.selectBox}>
-                        <Typography className={classes.selectInput}>
-                            <b> Select Group</b>
-                        </Typography>
-                        <FormControl className={classes.formControl}>
-                            <Select onChange={handleChange("networkId")}>
-                                <MenuItem value="" disabled>
-                                    Select Group
-                                </MenuItem>
-                                {groupsList.length > 0 ? (
-                                    groupsList.map((group, index) => (
-                                        <MenuItem key={index} value={group.name}>
-                                            {group.name}  {/* Adjust the property name to match your data */}
-                                        </MenuItem>
-                                    ))
-                                ) : (
-                                    <MenuItem value="" disabled>Loading Groups...</MenuItem>
-                                )}
-                            </Select>
-                        </FormControl>
-                    </div>
-
                     <div className={classes.formgrp}>
                         <Typography>
                             <b>Topic</b>
@@ -367,42 +311,6 @@ const AICreate = ({ user, siteUrl, i18n, t }) => {
                             onChange={handleChange("topic")}
                             className={classes.TextField}
                         />
-                    </div>
-
-                    {base64 && <img src={base64} className={classes.img1} />}
-                    <div className={classes.formgrp}>
-                        <Typography>
-                            <b>Icon</b>
-                        </Typography>
-                        <input
-                            accept="image/*"
-                            style={{ display: "none" }}
-                            id="contained-button-file2"
-                            onChange={getBase64}
-                            type="file"
-                        />
-                        <div className={classes.ButtonRoot}>
-                            <label htmlFor="contained-button-file2">
-                                <Button
-                                    variant="outlined"
-                                    color="primary"
-                                    size="small"
-                                    component="span"
-                                >
-                                    {t("Upload")}
-                                </Button>
-                            </label>
-                            <Button
-                                variant="outlined"
-                                disabled={!img}
-                                onClick={handleRemove}
-                                style={{ color: "red" }}
-                                size="small"
-                                component="span"
-                            >
-                                {t("remove")}
-                            </Button>
-                        </div>
                     </div>
 
                     <div className={classes.tag}>{handleTagRender()}</div>
@@ -418,7 +326,6 @@ const AICreate = ({ user, siteUrl, i18n, t }) => {
                             label={t("Add Tag")}
                             margin="dense"
                             placeholder={t("Enter a hashtag")}
-                            // size="small"
                             fullWidth
                             variant="outlined"
                         />
@@ -441,7 +348,7 @@ const AICreate = ({ user, siteUrl, i18n, t }) => {
                 >
                     <Button
                         className={classes.grpbtn2}
-                        onClick={closeCreateGroup}
+                        onClick={closeCreateAI}
                         color="default"
                         variant="outlined"
                     >
@@ -449,25 +356,23 @@ const AICreate = ({ user, siteUrl, i18n, t }) => {
                     </Button>
                     <Button
                         className={classes.grpbtn3}
-                        onClick={handleCreateGroup}
+                        onClick={handleCreateAI}
                         color="primary"
                         variant="contained"
                     >
                         {loading ? (
                             <CircularProgress style={{ color: "white" }} size={25} />
                         ) : (
-                            t("Create Community")
+                            t("Create AI Bot")
                         )}
                     </Button>
                 </DialogActions>
             </Dialog>
 
             <Paper className={classes.root}>
-                <div className={classes.grpbtndiv} onClick={openCreateGroup}>
+                <div className={classes.grpbtndiv} onClick={openCreateAI}>
                     <div className={classes.grpbtn}>Create AI</div>
                 </div>
-
-                {/* <Typography>Earn crypto based on the success of your group.</Typography> */}
             </Paper>
         </div>
     );
@@ -487,12 +392,6 @@ const useStyles = makeStyles((theme) => ({
     grpbtn: {
         fontSize: 16,
         color: "#3f48cc",
-    },
-    nsfw: {
-        backgroundColor: "#ff585b",
-        color: "white",
-        padding: "2px 6px",
-        borderRadius: "4px",
     },
     grpbtn2: {
         borderRadius: "50px",
@@ -514,19 +413,6 @@ const useStyles = makeStyles((theme) => ({
         padding: 10,
         alignItems: "center",
         borderRadius: "50px",
-    },
-    ButtonRoot: {
-        width: 150,
-        display: "flex",
-        justifyContent: "space-between",
-        alignItems: "center",
-        flexDirection: "row",
-        marginTop: 2,
-    },
-    img1: {
-        height: 150,
-        width: 150,
-        display: "block",
     },
     selectInput: {
         display: "inline",
@@ -553,6 +439,7 @@ const useStyles = makeStyles((theme) => ({
         alignItems: "center",
         flexDirection: "row",
         flexWrap: "wrap",
+        gap: "5px"
     },
 }));
 
