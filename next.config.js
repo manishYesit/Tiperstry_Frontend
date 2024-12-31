@@ -1,6 +1,6 @@
 module.exports = {
 	env: {
-		api: "https://new.tipestry.com/api",
+		api: "http://localhost:9000/api",
 		url: "http://localhost:3000"
 	}
 }
