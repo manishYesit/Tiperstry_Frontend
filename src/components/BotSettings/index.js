@@ -95,6 +95,16 @@ const BotSettings = ({ t }) => {
               />
 
             </FormGroup>
+
+            <FormGroup className={classes.formGroupBtn}>
+              <Button
+                color="primary"
+                variant="outlined"
+                onClick={() => setOpen(true)}
+              >
+                {t("Delete Bot")}
+              </Button>
+            </FormGroup>
           </div>
         </DialogContent>
         <DialogActions style={{ padding: "20px" }}>
