@@ -67,7 +67,7 @@ function Layout({ profile, user }) {
             {user.user && <ProfileCard user={user.user} />}
             <LadderBoard item='1' single />
 
-            {user?.user && <GroupRightSection profile={profile} user={user.user} />}
+            {/* {user?.user && <GroupRightSection profile={profile} user={user.user} />} */}
           </Hidden>
         </Grid>
       </Grid>

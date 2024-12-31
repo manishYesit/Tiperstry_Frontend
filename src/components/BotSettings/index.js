@@ -72,6 +72,7 @@ const BotSettings = ({ t }) => {
         keepMounted
         aria-labelledby="alert-dialog-slide-title"
         aria-describedby="alert-dialog-slide-description"
+        classes={{ paper: classes.dialogPaper }}
       >
         <DialogTitle id="alert-dialog-slide-title">Bot Settings</DialogTitle>
         <DialogContent className={classes.root}>
@@ -135,5 +136,8 @@ const useStyles = makeStyles(({ breakpoints }) => ({
   formGroupBtn: {
     marginTop: 15,
     alignContent: 'center',
-  }
+  },
+  dialogPaper: {
+    minWidth: '300px',
+  },
 }));
