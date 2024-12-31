@@ -58,7 +58,8 @@ import {
   INCLUDE_PROMOTED_POST,
   OPEN_ADD_MODERATOR,
   GET_CRYPTOS,
-  MODAL_SETTING_OPEN
+  MODAL_SETTING_OPEN,
+  BOT_MODAL_SETTING_OPEN
 } from "../types";
 
 let token;
@@ -83,6 +84,13 @@ export const setTopics = (payload) => {
 export const openSetting = (payload) => {
   return {
     type: MODAL_SETTING_OPEN,
+    payload,
+  };
+};
+
+export const openBotSetting = (payload) => {
+  return {
+    type: BOT_MODAL_SETTING_OPEN,
     payload,
   };
 };

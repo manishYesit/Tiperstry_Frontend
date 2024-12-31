@@ -18,7 +18,7 @@ import { config, api } from "../../../../config";
 import axios from "axios";
 import {
   setUserData,
-  openSetting,
+  openBotSetting,
   toggleVerifyChannelModal,
   toggleVerifyDomainModal,
 } from "../../../store/actions";
@@ -31,7 +31,7 @@ const mapStateToProps = (state) => ({
 
 const mapDispatchToProps = {
   setUserData,
-  openSetting,
+  openBotSetting,
   toggleVerifyDomainModal,
   toggleVerifyChannelModal,
 };
@@ -40,7 +40,7 @@ const ProfileInfo = ({
   profile,
   user,
   setUserData,
-  openSetting,
+  openBotSetting,
   toggleVerifyDomainModal,
   toggleVerifyChannelModal,
   t,
@@ -259,7 +259,7 @@ const ProfileInfo = ({
                   variant="outlined"
                   disableElevation
                   disableFocusRipple
-                  onClick={openSetting}
+                  onClick={openBotSetting}
                   color="primary"
                 >
                   {t("Settings")}

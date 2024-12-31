@@ -25,6 +25,9 @@ export const DELETE_REPORT = "DELETE_REPORT";
 export const GET_REPORTED_USERS = "GET_REPORTED_USERS";
 export const MODAL_SETTING_OPEN = "MODAL_SETTING_OPEN";
 
+//bot
+export const BOT_MODAL_SETTING_OPEN = "BOT_MODAL_SETTING_OPEN";
+
 // gift
 export const OPEN_GIFT = "OPEN_GIFT";
 export const SET_ELEMENT_ID = "SET_ELEMENT_ID";

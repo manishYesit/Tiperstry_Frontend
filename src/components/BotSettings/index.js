@@ -13,7 +13,7 @@ import FormGroup from '@material-ui/core/FormGroup';
 import Switch from '@material-ui/core/Switch';
 
 import DeleteAccount from "./deleteAccount";
-import { openSetting } from "../../store/actions";
+import { openBotSetting } from "../../store/actions";
 import { withTranslation } from "../../../i18n";
 import { config } from "../../../config";
 
@@ -25,16 +25,13 @@ const BotSettings = ({ t }) => {
   const classes = useStyles();
   const dispatch = useDispatch();
 
-  const settingModal = useSelector(({ user }) => user.setting);
-  const userSetting = useSelector(({ user }) =>
-    user.user ? user.user.setting : null
+  const settingModal = useSelector(({ bot }) => bot.setting);
+  const botSetting = useSelector(({ bot }) =>
+    bot.bot ? bot.bot.setting : null
   );
 
   const [setting, setSetting] = useState({
-    upvoted: false,
-    downvoted: false,
-    isAIAccount: true,
-    showAIContent: false,
+    isBotEnabled: true
   });
 
   const [open, setOpen] = useState(false);
@@ -45,15 +42,12 @@ const BotSettings = ({ t }) => {
   });
 
   React.useEffect(() => {
-    if (userSetting) {
+    if (botSetting) {
       setSetting({
-        upvoted: userSetting.upvoted,
-        downvoted: userSetting.downvoted,
-        isAIAccount: userSetting.isAIAccount,
-        showAIContent: userSetting.showAIContent
+        isBotEnabled: botSetting.isBotEnabled
       })
     }
-  }, [userSetting]);
+  }, [botSetting]);
 
   const handleChange = (event) => {
     setSetting({ ...setting, [event.target.name]: event.target.checked });
@@ -79,74 +73,34 @@ const BotSettings = ({ t }) => {
         aria-labelledby="alert-dialog-slide-title"
         aria-describedby="alert-dialog-slide-description"
       >
-        <DialogTitle id="alert-dialog-slide-title">Account Settings</DialogTitle>
+        <DialogTitle id="alert-dialog-slide-title">Bot Settings</DialogTitle>
         <DialogContent className={classes.root}>
           <div>
             <FormGroup>
-              <FormControlLabel
-                control={
-                  <Switch
-                    checked={setting.upvoted}
-                    onChange={handleChange}
-                    name="upvoted"
-                    color="primary"
-                  />
-                }
-                label="Don't show me submissions after I've upvoted them (except my own)"
-              />
 
               <FormControlLabel
                 control={
                   <Switch
-                    checked={setting.downvoted}
+                    checked={setting.isBotEnabled}
                     onChange={handleChange}
-                    name="downvoted"
+                    name="isBotEnabled"
                     color="primary"
                   />
                 }
-                label="Don't show me submissions after I've downvoted them (except my own)"
-              />
-
-              <FormControlLabel
-                control={
-                  <Switch
-                    checked={setting.showAIContent}
-                    onChange={handleChange}
-                    name="showAIContent"
-                    color="primary"
-                  />
+                label = {
+                  setting.isBotEnabled
+                    ? "Disable the bot"
+                    : "Enable the bot"
                 }
-                label="Show AI-Generated Content"
               />
 
-              <FormControlLabel
-                control={
-                  <Switch
-                    checked={setting.isAIAccount}
-                    onChange={handleChange}
-                    name="isAIAccount"
-                    color="primary"
-                  />
-                }
-                label="This account posts AI-Generated Content"
-              />
-            </FormGroup>
-
-            <FormGroup className={classes.formGroupBtn}>
-              <Button
-                color="primary"
-                variant="outlined"
-                onClick={() => setOpen(true)}
-              >
-                {t("Delete Account")}
-              </Button>
             </FormGroup>
           </div>
         </DialogContent>
         <DialogActions style={{ padding: "20px" }}>
           <Button
             onClick={() =>
-              dispatch(openSetting(!settingModal))
+              dispatch(openBotSetting(!settingModal))
             }
             color="default"
             variant="outlined"

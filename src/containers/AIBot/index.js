@@ -51,7 +51,7 @@ const Broadcast = dynamic(() => import("../../components/Broadcast"), {
   ssr: false,
 });
 
-const Setting = dynamic(() => import("../../components/Setting"), {
+const Setting = dynamic(() => import("../../components/BotSettings"), {
   ssr: false,
 });
 

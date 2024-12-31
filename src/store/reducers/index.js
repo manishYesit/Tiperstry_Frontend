@@ -12,6 +12,7 @@ import searchReducer from "./searchReducer";
 import domainReducer from "./domainReducer";
 import youtubeChannelReducer from "./youtubeChannelReducer";
 import cryptosReducer from "./cryptosReducer";
+import botReducer from "./botReducer";
 
 const appReducer = combineReducers({
   user: userReducer,
@@ -27,6 +28,7 @@ const appReducer = combineReducers({
   broadcast: broadcastReducer,
   group: groupReducer,
   cryptos: cryptosReducer,
+  bot: botReducer
 });
 
 export default appReducer;
