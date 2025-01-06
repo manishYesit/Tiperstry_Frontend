@@ -117,6 +117,7 @@ export const config = {
   groupbyowner: api + "/groups/group-by-owner",
   crypto: api + "/tokens",
   approvecrypto: api + "/tokens/approve-token",
+  createaibot: api + "/user/bot"
 };
 
 export const maxfilesize = 5 * 1024 * 1024;

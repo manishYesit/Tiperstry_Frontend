@@ -139,13 +139,19 @@ const AICreate = ({ user, t }) => {
     const handleGetGroupsList = async () => {
         try {
             const token = localStorage.getItem("token");
+
             if (token) {
-                const groups = await axios.get(config.listgroups + "?joinedgroups=1&username=" + user.username, {
+                const joinedGroups = await axios.get(config.listgroups + "?joinedgroups=1&username=" + user.username, {
                     headers: { "x-auth-token": token },
                 });
+                const createdGroups = await axios.get(config.listgroups + "?username=" + user.username, {
+                    headers: { "x-auth-token": token },
+                });
+                // console.log("groups is", joinedGroups, createdGroups);
 
-                if (groups.data.status == "success") {
-                    setGroupsList(groups.data.groups);
+                if (joinedGroups.data.status == "success" && createdGroups.data.status == "success") {
+                    let groups = [...joinedGroups.data.groups, ...createdGroups.data.groups]
+                    setGroupsList(groups);
                 }
             }
         }
@@ -185,29 +191,38 @@ const AICreate = ({ user, t }) => {
 
             setLoading(true);
 
-            const formData = new FormData();
-            formData.append("name", aiData.name);
-            formData.append("agent_model", aiData.agent_model);
-            formData.append("groupId", aiData.groupId);
-            formData.append("topic", aiData.topic);
+            // const formData = new FormData();
+            // formData.append("name", aiData.name);
+            // formData.append("agent_model", aiData.agent_model);
+            // formData.append("groupId", aiData.groupId);
+            // formData.append("topic", aiData.topic);
+            // formData.append("tags", chipData.flatMap((chip) => chip.label));
+
+            const bodyData = {
+                "name": aiData.name,
+                "agent_model": aiData.agent_model,
+                "groupId": aiData.groupId,
+                "topic": aiData.topic,
+                "tags": chipData.flatMap((chip) => chip.label)
+            }
 
             setLoading(false);
-            return;
+            // return;
 
             const token = localStorage.getItem("token");
 
             const headers = {
                 "x-auth-token": token
             };
+            // console.log("formData contents:");
+            // for (let [key, value] of formData.entries()) {
+            //     console.log(`${key}: ${value}`);
+            // }
+            // console.log("ai data is", aiData, chipData.flatMap((chip) => chip.label));
+            // return;
+            const createbotresponse = await axios.post(config.createaibot, bodyData, {headers});
 
-            const creategroupresponse = await axios({
-                method: "post",
-                headers,
-                url: config.creategroup,
-                data: formData,
-            });
-
-            if (creategroupresponse.data.status != "success") {
+            if (createbotresponse.data.status != "success") {
                 setRes({
                     err: true,
                     msg: "This AI Agent already exists",
@@ -220,7 +235,7 @@ const AICreate = ({ user, t }) => {
             setLoading(false);
 
             router.push(
-                `/group/${aiData.name.replaceAll(" ", "-").replace("&", "%26")}`
+                `/bot/${aiData.name.replaceAll(" ", "-").replace("&", "%26")}`
             );
         } catch (error) {
             setLoading(false);
